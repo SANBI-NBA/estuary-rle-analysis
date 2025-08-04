@@ -31,7 +31,7 @@ est_results_type <- RLE %>%
     mutate(RLE_EPL24 = factor(RLE_EPL24, levels = c("LC_WP", "LC_MP", "VU_WP", "VU_MP", "LC_PP",  "LC_NP",  "VU_PP", "VU_NP", "EN_WP", "EN_MP",  "CR_WP", "CR_MP","EN_PP" , "EN_NP","CR_PP", "CR_NP"), ordered = TRUE)) %>%
   relocate(biogeographical_zone, .after = full_ecosystem_type_name) %>%
   relocate(RLE_EPL24, .after = EPL24) %>%
-mutate(extent = tot_ext24)
+mutate(extent = tot_ext24/1e6)
 
 # MAKE simple output for coastal and overal integrated results and plots 
 est_results_for_integration <- est_results_type %>%
