@@ -1,0 +1,23 @@
+"","full_ecosystem_type_name","biogeographical_zone","tot_ext24","RLE18","trigger18","RLE24","trigger24","EPL18","EPL24","RLE_EPL24","extent"
+"1","1 Cool Temperate - Arid Predominantly Closed","aCTemp",14402116.5678708,"EN","D3_18","EN","D3_24","PP","PP","EN_PP",14402116.5678708
+"2","1 Cool Temperate - Estuarine Lagoon","aCTemp",60068831.4211718,"VU","B3_18","VU","B3_24","MP","MP","VU_MP",60068831.4211718
+"3","1 Cool Temperate - Estuarine Lake","aCTemp",70930767.1719994,"VU","B3_18, D3_18","EN","D3_24","PP","PP","EN_PP",70930767.1719994
+"4","1 Cool Temperate - Large Fluvially Dominated","aCTemp",30190584.6029966,"EN","D3_18","EN","D3_24","PP","PP","EN_PP",30190584.6029966
+"5","1 Cool Temperate - Large Temporarily Closed","aCTemp",32839120.0959501,"EN","D3_18","EN","D3_24","PP","PP","EN_PP",32839120.0959501
+"6","1 Cool Temperate - Predominantly Open","aCTemp",152598212.237101,"VU","B3_18, D3_18","EN","D3_24","NP","NP","EN_NP",152598212.237101
+"7","1 Cool Temperate - Small Fluvially Dominated","aCTemp",39565.5144470274,"VU","A2b_18","VU","A2b_24","WP","WP","VU_WP",39565.5144470274
+"8","1 Cool Temperate - Small Temporarily Closed","aCTemp",5176403.67488375,"LC","A2b_18, A3_18, B3_18, D3_18","EN","D3_24","MP","MP","EN_MP",5176403.67488375
+"9","2 Warm Temperate - Estuarine Bay","bWTemp",30105647.1283708,"VU","B3_18","VU","B3_24","MP","MP","VU_MP",30105647.1283708
+"10","2 Warm Temperate - Estuarine Lake","bWTemp",143423569.509232,"LC","A2b_18, A3_18, B3_18, D3_18","LC","A2b_24, A3_24, B3_24, D3_24","MP","MP","LC_MP",143423569.509232
+"11","2 Warm Temperate - Large Fluvially Dominated","bWTemp",5725821.12925239,"VU","B3_18, D3_18","VU","B3_24, D3_24","NP","NP","VU_NP",5725821.12925239
+"12","2 Warm Temperate - Large Temporarily Closed","bWTemp",69259667.3221285,"LC","A2b_18, A3_18, B3_18, D3_18","LC","A2b_24, A3_24, B3_24, D3_24","PP","PP","LC_PP",69259667.3221285
+"13","2 Warm Temperate - Predominantly Open","bWTemp",176692482.93924,"LC","A2b_18, A3_18, B3_18, D3_18","LC","A2b_24, A3_24, B3_24, D3_24","PP","PP","LC_PP",176692482.93924
+"14","2 Warm Temperate - Small Fluvially Dominated","bWTemp",1224358.29857325,"LC","A2b_18, A3_18, B3_18, D3_18","LC","A2b_24, A3_24, B3_24, D3_24","WP","WP","LC_WP",1224358.29857325
+"15","2 Warm Temperate - Small Temporarily Closed","bWTemp",16102721.1742301,"LC","A2b_18, A3_18, B3_18, D3_18","LC","A2b_24, A3_24, B3_24, D3_24","MP","MP","LC_MP",16102721.1742301
+"16","3 Subtropical - Estuarine Bay","cSubTrop",28152019.8774511,"CR","D3_18","CR","D3_24","NP","NP","CR_NP",28152019.8774511
+"17","3 Subtropical - Estuarine Lake","cSubTrop",818752767.461073,"EN","D3_18","EN","D3_24","MP","MP","EN_MP",818752767.461073
+"18","3 Subtropical - Large Fluvially Dominated","cSubTrop",107658288.479826,"VU","A2b_18, B3_18, D3_18","EN","D3_24","PP","PP","EN_PP",107658288.479826
+"19","3 Subtropical - Large Temporarily Closed","cSubTrop",50512089.7559682,"LC","A2b_18, A3_18, B3_18, D3_18","LC","A2b_24, A3_24, B3_24, D3_24","PP","PP","LC_PP",50512089.7559682
+"20","3 Subtropical - Predominantly Open","cSubTrop",78499142.0166852,"LC","A2b_18, A3_18, B3_18, D3_18","LC","A2b_24, A3_24, B3_24, D3_24","MP","MP","LC_MP",78499142.0166852
+"21","3 Subtropical - Small Temporarily Closed","cSubTrop",20483903.6645557,"LC","A2b_18, A3_18, B3_18, D3_18","LC","A2b_24, A3_24, B3_24, D3_24","MP","MP","LC_MP",20483903.6645557
+"22","4 Tropical - Estuarine Lake","dTropical",81662947.7243529,"VU","B3_18","VU","B3_24","MP","MP","VU_MP",81662947.7243529

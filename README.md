@@ -62,7 +62,9 @@ Reflecting changes in ecosystem RLE between 2018 and 2024
 
 The Quarto document [RLE_EPL_results.qmd](RLE_EPL_results.qmd) describes the combination of the RLE and EPL results and the production of a spatial version of the results attached to a estuarine functional zone map extracted from the South African IEM5_12_07012025 (curated by SANBI).
 
-The consolidated estuarine results table can be found here: [RLE_EPL_est_results_est.csv](outputs/RLE_EPL_est_results_est.csv)
+The consolidated estuarine results table can be found here: [outputs/est_results_type.csv](outputs/est_results_type.csv)
+
+Simplified results here: [outputs/est_results_for_integration.csv](outputs/est_results_for_integration.csv)
 
 **Highly threatened and under-protected ecosystems**
 

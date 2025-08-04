@@ -16,12 +16,12 @@ EPL <- read.csv("C:/Rdata/EPL_est/outputs/epl_est_metrics_per_type.csv")
 
 # select only cols required and then join
 RLE <- RLE %>%
-  select(full_ecosystem_type_name, RLE18, trigger18, RLE24, trigger24)
+  select(full_ecosystem_type_name, tot_ext24, RLE18, trigger18, RLE24, trigger24)
 EPL <- EPL %>%
   select(full_ecosystem_type_name, biogeographical_zone, EPL18_model, EPL24_model) %>% 
   rename(EPL18 = EPL18_model, EPL24 = EPL24_model)
   
-est_results <- RLE %>%
+est_results_type <- RLE %>%
   left_join(EPL, by = "full_ecosystem_type_name") %>%
   # combine RLE and EPL into a new col
   unite("RLE_EPL24", RLE24, EPL24, sep = "_", remove = FALSE) %>%
@@ -30,10 +30,19 @@ est_results <- RLE %>%
   mutate(EPL24 = factor(EPL24, levels = c("NP", "PP", "MP", "WP"), ordered = TRUE)) %>%
     mutate(RLE_EPL24 = factor(RLE_EPL24, levels = c("LC_WP", "LC_MP", "VU_WP", "VU_MP", "LC_PP",  "LC_NP",  "VU_PP", "VU_NP", "EN_WP", "EN_MP",  "CR_WP", "CR_MP","EN_PP" , "EN_NP","CR_PP", "CR_NP"), ordered = TRUE)) %>%
   relocate(biogeographical_zone, .after = full_ecosystem_type_name) %>%
-  relocate(RLE_EPL24, .after = EPL24)
+  relocate(RLE_EPL24, .after = EPL24) %>%
+mutate(extent = tot_ext24)
+
+# MAKE simple output for coastal and overal integrated results and plots 
+est_results_for_integration <- est_results_type %>%
+  select(full_ecosystem_type_name, biogeographical_zone, extent, RLE24, EPL24, RLE_EPL24) %>%
+  mutate(realm = "est") %>%
+  rename(type = full_ecosystem_type_name, RLE = RLE24, EPL = EPL24, RLE_EPL = RLE_EPL24, zone = biogeographical_zone)
+
 
 # write results
-write.csv(est_results, file = "outputs/RLE_EPL_est_results.csv")
+write.csv(est_results_type, file = "outputs/est_results_type.csv")
+write.csv(est_results_for_integration, file = "outputs/est_results_for_integration.csv")
 
 ```
 
