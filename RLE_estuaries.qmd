@@ -96,6 +96,10 @@ st_drop_geometry() %>%
 
 ```
 
+```{r}
+
+```
+
 #### Spatial Analysis
 
 ```{r}
@@ -399,6 +403,13 @@ mean_cond24 <- est %>%
 outletcount <- est %>%
   group_by(full_ecosystem_type_name) %>%
   summarise(outletcount = n_distinct(outletID))
+
+# PES results 24 for booklet narratives
+pes24_stats <- est_type_24 %>%
+    bind_rows(summarise(., full_ecosystem_type_name = "Total", across(where(is.numeric), ~sum(., na.rm = TRUE)) ) ) %>%
+  mutate(prp24_ab = (A+B)/tot_ext24)
+
+  write.csv(pes24_stats, file = "outputs/est_pes24_per_type.csv")
 ```
 
 **Calculate metrics and run the assessments of Crit B and D, join in Crit A assessment and work out overall RLE**
