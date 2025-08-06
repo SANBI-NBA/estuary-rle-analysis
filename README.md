@@ -56,7 +56,7 @@ Reflecting changes in ecosystem RLE between 2018 and 2024
 
 | RLIE |   |
 |------------------------------------|------------------------------------|
-| ![](outputs/rlie_est_line_plot.png) | Red List Index of Ecosystems between 2018 and 2024. Showing increased risk of collapse for Cool Temperate Estuaries |
+| ![](outputs/rlie_est_line_plot.png) | Red List Index of Ecosystems between 2018 and 2024. Showing increased risk of collapse for Warm Temperate and Tropical Estuaries |
 
 **Combined RLE and EPL results**
 
