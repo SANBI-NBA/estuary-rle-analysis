@@ -382,6 +382,10 @@ fp11 <- est %>%
     rename(N11=N, L11=L, M11=M, H11=H, VH11=VH) 
 
 # overall type condition score (average per type/# types to remove size effect and treat each est same)
+mean_cond11 <- est %>%
+  group_by(full_ecosystem_type_name) %>%
+  summarise(mean_cond11 = mean(as.numeric(condition11), na.rm = TRUE)) %>%
+  ungroup()
 mean_cond18 <- est %>%
   group_by(full_ecosystem_type_name) %>%
   summarise(mean_cond18 = mean(as.numeric(condition18), na.rm = TRUE)) %>%
@@ -406,16 +410,21 @@ outletcount <- est %>%
    left_join(est_type_18, by = "full_ecosystem_type_name") %>%
    left_join(est_type_11, by = "full_ecosystem_type_name") %>%
    left_join(eoo_df, by = "full_ecosystem_type_name") %>%
+   left_join(mean_cond11, by = "full_ecosystem_type_name") %>%
    left_join(mean_cond18, by = "full_ecosystem_type_name") %>%
    left_join(mean_cond24, by = "full_ecosystem_type_name") %>%
     left_join(fp24, by = "full_ecosystem_type_name") %>%
     left_join(fp18, by = "full_ecosystem_type_name") %>%
     left_join(fp11, by = "full_ecosystem_type_name") %>%
  # 2018 metrics
-    mutate(prp18_cde = (C18 + D18 + E18)/tot_ext24) %>%
-    mutate(prp18_de = (D18 + E18)/tot_ext24) %>%
-    mutate(prp18_e= (E18)/tot_ext24) %>%
-   # for B evidence of ongoing decline: 
+   mutate(prp18_cde = (C18 + D18 + E18)/tot_ext24) %>%
+   mutate(prp18_de = (D18 + E18)/tot_ext24) %>%
+   mutate(prp18_e= (E18)/tot_ext24) %>%
+  # add fishing pressure extent and severity
+   mutate(prp18_fp_mhvh = (M18 + H18 + VH18)/tot_ext24) %>%
+   mutate(prp18_fp_hvh = (H18 + VH18)/tot_ext24) %>%
+   mutate(prp18_fp_vh = ( VH18)/tot_ext24) %>%
+  # for B evidence of ongoing decline: 
      # 1 calc ext of abc cond and if it drops between t1 and t2 by > 1% then = decline in pes 
     mutate(pes_decline1118 = ifelse(is.na(((A11 + B11 + C11) - (A18 + B18 + C18)) / (A11 + B11 + C11)) |
                                      (((A11 + B11 + C11) - (A18 + B18 + C18)) / (A11 + B11 + C11)) > 0.01,
@@ -427,40 +436,39 @@ outletcount <- est %>%
     mutate(prp24_cde = (C + D + E)/tot_ext24) %>%
     mutate(prp24_de = (D + E)/tot_ext24) %>%
     mutate(prp24_e= (E)/tot_ext24) %>%
+   # add fishing pressure extent and severity
+   mutate(prp24_fp_mhvh = (M + H + VH)/tot_ext24) %>%
+   mutate(prp24_fp_hvh = (H + VH)/tot_ext24) %>%
+   mutate(prp24_fp_vh = ( VH)/tot_ext24) %>%
+# calculate ongoing decline and fishing increases
     mutate(pes_decline1824 = ifelse(is.na(((A18 + B18 + C18) - (A + B + C)) / (A18 + B18 + C18)) |
                                     (((A18 + B18 + C18) - (A + B + C)) / (A18 + B18 + C18)) > 0.01, 
                                     "decline1824", "nodecline1824")) %>% 
     mutate(fp_inc1824 = ifelse(((N18+L18+M18) < (N+L+M)) | (VH > VH18) |  
                                 ((H+VH)/(N+L+M+H+VH) > 0.3), "fpinc1824", "nofpinc1824")) %>% 
- # D3 assesments
+ # D3 fishing pressure assessment  
+    mutate(D3f_24 = case_when( prp24_fp_vh >= 0.9 ~ "CR", 
+                              prp24_fp_vh >= 0.7 | prp24_fp_hvh >=0.9 ~ "EN",
+                              prp24_fp_vh >= 0.5 | prp24_fp_hvh >=0.7 | prp24_fp_mhvh >= 0.9 ~ "VU",
+                              TRUE ~ "LC")) %>% 
+    mutate(D3f_24 = factor(D3f_24, levels = c("LC","VU", "EN", "CR"), ordered = TRUE)) %>%
+    mutate(D3f_18 = case_when( prp18_fp_vh >= 0.9 ~ "CR", 
+                              prp18_fp_vh >= 0.7 | prp18_fp_hvh >=0.9 ~ "EN",
+                              prp18_fp_vh >= 0.5 | prp18_fp_hvh >=0.7 | prp18_fp_mhvh >= 0.9 ~ "VU",
+                              TRUE ~ "LC")) %>% 
+     mutate(D3f_18 = factor(D3f_18, levels = c("LC","VU", "EN", "CR"), ordered = TRUE)) %>%
+       # D3 PES 
     mutate(D3_18 = case_when( prp18_e >= 0.9 ~ "CR", 
                               prp18_e >= 0.7 | prp18_de >=0.9 ~ "EN",
                               prp18_e >= 0.5 | prp18_de >=0.7 | prp18_cde >= 0.9 ~ "VU",
                               TRUE ~ "LC")) %>% 
     mutate(D3_18 = factor(D3_18, levels = c("LC","VU", "EN", "CR"), ordered = TRUE)) %>%
     mutate(D3_24 = case_when( prp24_e >= 0.9 ~ "CR", 
-                              prp24_de >= 0.3 | prp24_de >=0.9 ~ "EN",
+                              prp24_de >= 0.7 | prp24_de >=0.9 ~ "EN",
                               prp24_e >= 0.5 | prp24_de >=0.7 |prp24_cde >= 0.9 ~ "VU",
                               TRUE ~ "LC")) %>%
      mutate(D3_24 = factor(D3_24, levels = c("LC","VU", "EN", "CR"), ordered = TRUE)) %>%
-#  B1aii using ongoing decline  
-   mutate(B1aii_18 = case_when( (pes_decline1118 == "decline118" | fp_inc1118 == "fpinc1118") 
-                                & eoo_km2  <= 2000 ~ "CR", 
-                                (pes_decline1118 == "decline118" | fp_inc1118 == "fpinc1118")
-                                & eoo_km2  <= 20000 ~ "EN",
-                                (pes_decline1118 == "decline118" | fp_inc1118 == "fpinc1118")
-                                & eoo_km2  <= 50000 ~ "VU", 
-                                TRUE ~ "LC")) %>%
-   mutate(B1aii_18 = factor(B1aii_18, levels = c("LC","VU", "EN", "CR"), ordered = TRUE)) %>%
-   mutate(B1aii_24 = case_when( (pes_decline1824 == "decline1824" | fp_inc1824 == "fpinc1824") 
-                                & eoo_km2  <= 2000 ~ "CR", 
-                                (pes_decline1824 == "decline1824" | fp_inc1824 == "fpinc1824")
-                                & eoo_km2  <= 20000 ~ "EN", 
-                                (pes_decline1824 == "decline1824" | fp_inc1824 == "fpinc1824")
-                                & eoo_km2  <= 50000 ~ "VU", 
-                                TRUE ~ "LC")) %>%
-   mutate(B1aii_24 = factor(B1aii_24, levels = c("LC","VU", "EN", "CR"), ordered = TRUE)) %>%
-  # add the table with A3 and Asb
+   # add the table with A3 and Asb
     left_join(estnow_lc_metrics, by = "full_ecosystem_type_name") %>%
    # add feature count for B3 calcs
     left_join(outletcount, by = "full_ecosystem_type_name") %>%
@@ -473,18 +481,18 @@ outletcount <- est %>%
    #clean  cols
    select(-N,-N11, -N18, -L, -L11, -L18, -M, -M11, -M18, -H, -H11, -H18, -VH, -VH11, -VH18, -A, -A11, -A18,
           -B, -B11, -B18, -C, -C11, -C18, -D, -D11, -D18, -E, -E11, -E18, -nat1990, -nat2014, -nat2018, -nat2022, -nat40_9022, -nat40_9018) %>%
-   relocate(B1aii_18, A2b_18, A3_18, B3_18, D3_18, B1aii_24, A2b_24, A3_24,   B3_24, D3_24 , 
+   relocate( A2b_18, A3_18, B3_18, D3f_18, D3_18,  A2b_24, A3_24,   B3_24, D3f_24, D3_24 , 
             .after = prplost9040_9018) %>%
   # overall RLE outcome USING  A2b A3 B1 B3 D3
      rowwise() %>%
    # FINAL RLE BUT EXCLUDE B1aii and use B3 rather
-    mutate(RLE18 = max(c_across(all_of(c("D3_18",  "B3_18", "A2b_18", "A3_18"))), na.rm = TRUE)) %>%
-    mutate(RLE24 = max(c_across(all_of(c("D3_24",  "B3_24", "A2b_24", "A3_24"))), na.rm = TRUE)) %>%
+    mutate(RLE18 = max(c_across(all_of(c( "D3f_18", "D3_18",  "B3_18", "A2b_18", "A3_18"))), na.rm = TRUE)) %>%
+    mutate(RLE24 = max(c_across(all_of(c( "D3f_24",  "D3_24",  "B3_24", "A2b_24", "A3_24"))), na.rm = TRUE)) %>%
      ungroup() %>%
    rowwise() %>%
-  mutate(trigger18 = paste(c("A2b_18", "A3_18", "B3_18", "D3_18")
+  mutate(trigger18 = paste(c("A2b_18", "A3_18", "B3_18", "D3f_18", "D3_18")
                            [c_across(A2b_18:D3_18) == RLE18], collapse = ", ")) %>%
-  mutate(trigger24 = paste(c("A2b_24", "A3_24", "B3_24", "D3_24")
+  mutate(trigger24 = paste(c("A2b_24", "A3_24", "B3_24","D3f_24",   "D3_24")
                            [c_across(A2b_24:D3_24) == RLE24], collapse = ", ")) %>%
    ungroup()
   
