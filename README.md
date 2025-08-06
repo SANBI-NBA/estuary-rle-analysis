@@ -43,11 +43,11 @@ Summary table - count of estuarine ecosystem types per biogeographic zone per RL
 Summary table - extent of estuarine ecosystem per biogeographic zone per RLE category [rle24_est_sum_ext.csv](outputs/rle24_est_sum_ext.csv)
 
 | RLE 2024 - count of types per category | RLE 2024 - extent of types per category |
-|----|----|
+|------------------------------------|------------------------------------|
 | ![](outputs/rle24_est_barplot_count.png) | ![](outputs/rle24_est_barplot_ext.png) |
 
 | RLE 2018 - count of types per category | RLE 2018 - extent of types per category |
-|----|----|
+|------------------------------------|------------------------------------|
 | ![](outputs/rle18_est_barplot_count.png) | ![](outputs/rle18_est_barplot_ext.png) |
 
 **RLE Index**
@@ -55,7 +55,7 @@ Summary table - extent of estuarine ecosystem per biogeographic zone per RLE cat
 Reflecting changes in ecosystem RLE between 2018 and 2024
 
 | RLIE |   |
-|----|----|
+|------------------------------------|------------------------------------|
 | ![](outputs/rlie_est_line_plot.png) | Red List Index of Ecosystems between 2018 and 2024. Showing increased risk of collapse for Cool Temperate Estuaries |
 
 **Combined RLE and EPL results**
@@ -68,4 +68,4 @@ Simplified results here: [outputs/est_results_for_integration.csv](outputs/est_r
 
 **Highly threatened and under-protected ecosystems**
 
-30% of estuary types (7/22) are highly threatened (EN/CR) and under protected (NP/ PP), 5 of these occur in the Cool Temperate biogeographical region
+30% of estuary types (7/22) are highly threatened (EN/CR) and under protected (NP/ PP), 4 of these occur in the Cool Temperate biogeographical region

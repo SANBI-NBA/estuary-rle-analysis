@@ -47,18 +47,18 @@ write.csv(est_results_for_integration, file = "outputs/est_results_for_integrati
 ```
 
 ```{r}
-# Add spatial data - use IEM Jan 2025 then extract Estuaries
-est_v4 <- est_v2 %>%
-  left_join(est_t2, by = "outletID")
+# # Add spatial data - use IEM Jan 2025 then extract Estuaries
+# est_v4 <- est_v2 %>%
+#   left_join(est_t2, by = "outletID")
 ```
 
 ```{r}
 # Prepare output spatial data with combined RLE and EPL results 
-est_results_vector <- est_v4 %>%
-  left_join(est_results, by = "full_ecosystem_type_name") %>%
-  rename(biogeographical_zone = biogeographical_zone.x) %>%
-  select(-biogeographical_zone.y)
-est_results_vector <- st_transform(est_results_vector, 4326)
- 
-st_write(est_results_vector, "C:/Users/skownoa/Dropbox/NBAwork/Estuaries/est_results_vector.gpkg", delete_dsn = TRUE) 
+# est_results_vector <- est_v4 %>%
+#   left_join(est_results, by = "full_ecosystem_type_name") %>%
+#   rename(biogeographical_zone = biogeographical_zone.x) %>%
+#   select(-biogeographical_zone.y)
+# est_results_vector <- st_transform(est_results_vector, 4326)
+#  
+# st_write(est_results_vector, "C:/Users/skownoa/Dropbox/NBAwork/Estuaries/est_results_vector.gpkg", delete_dsn = TRUE) 
 ```
