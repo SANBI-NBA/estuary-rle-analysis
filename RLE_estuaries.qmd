@@ -20,7 +20,7 @@ est_v <- est_v %>%
   filter(outletID > 0, E_Est_BrdG != "Micro-System") # select only estuaries and exclude micros 
 
 # Add tabular data (in excel change sheet name to Data, and remove last two rows on NAs, change cols with numbers at start of name )
-est_t <- read_excel("C:/Users/skownoa/Dropbox/NBAwork/Estuaries/estuary_assesment2025_v1.xlsx", sheet = "Data")
+est_t <- read_excel("C:/Users/skownoa/Dropbox/NBAwork/Estuaries/estuary_assesment2025_v8.xlsx", sheet = "Data")
 
 # load supplementary data from nba2018 on the eoo a00 and number of locations and ongoing decline
 est_supp <- read_csv("C:/Users/skownoa/Dropbox/NBAwork/Estuaries/from_nba2018_eoo_aoo_numfeat.csv")
@@ -40,7 +40,17 @@ est_v2 <- est_v %>%
 
 # select colums from  health spreadsheet import
 est_t2 <- est_t %>%
-  select(outletID,  estID, east_DD, south_DD, est_name, full_ecosystem_type_name, est_ecosystem_type_code, biogeographical_zone, efz_ha, condition24, condition18, condition11, fishing_effort24, fishing_effort18, fishing_effort11)
+  select(outletID,  estID, east_DD, south_DD, est_name, full_ecosystem_type_name, est_ecosystem_type_code, biogeographical_zone, efz_ha, `2025_est_condition`, `2018_est_condition`, `2011_est_condition`, Pressure_2025_fishing_effort_DEFF, Pressure_2018_fishing_effort_DEFF, Pressure_2011_fishing_effort_DEFF, `hundred_km-zone`, `Condition_100km-zone`, fish, fish2018) %>% 
+# clean up names for r
+  rename(hund_km_zone =`hundred_km-zone`, hund_km_zone_cond = `Condition_100km-zone`, 
+       condition24 =`2025_est_condition`, condition18 =`2018_est_condition`, 
+       condition11 = `2011_est_condition`, fishing_effort24 = Pressure_2025_fishing_effort_DEFF,
+       fishing_effort18 = Pressure_2018_fishing_effort_DEFF, 
+       fishing_effort11 = Pressure_2011_fishing_effort_DEFF) %>% 
+  #fix Vh case 
+  mutate(fishing_effort24 = ifelse(fishing_effort24 == "Vh", "VH", fishing_effort24)) %>%
+  # drop black rows at end of table
+  filter(!is.na(outletID ))
 
 # combined estuary data into a table
 est <- est_v2 %>%
@@ -93,10 +103,6 @@ st_drop_geometry() %>%
     TRUE ~ "E"
   )) 
 
-
-```
-
-```{r}
 
 ```
 
@@ -222,7 +228,7 @@ openw <-st_read("C:/Users/skownoa/Dropbox/NBAwork/Estuaries/openwater_nmu.shp")
 est_now <- st_difference(est_v3, st_union(openw))
 
 extract2022now <- terra::extract(lc2022, est_now)
-extract2022now$outletID <- est_now2$outletID[extract2022now$ID] # note - indexing not a join
+extract2022now$outletID <- est_now$outletID[extract2022now$ID] # note - indexing not a join
 tb2022now <- extract2022now %>%
   count(outletID, class = .[[2]], name = "Freq") %>%
   mutate(YEAR = 2022)
@@ -410,6 +416,20 @@ pes24_stats <- est_type_24 %>%
   mutate(prp24_ab = (A+B)/tot_ext24)
 
   write.csv(pes24_stats, file = "outputs/est_pes24_per_type.csv")
+  
+# 100km Zone condition summary 
+  hund_km_zone_cond <- est %>%
+    group_by(full_ecosystem_type_name) %>%
+    summarise(hkz_cond =max(hund_km_zone_cond))
+    
+# fish score proportionally 
+   fishscore <- est %>%
+  group_by(full_ecosystem_type_name) %>%
+  summarise(
+    fishsum24 = sum(fish / 100 * efz_area, na.rm = TRUE),
+    fishsum18 = sum(fish2018 / 100 * efz_area, na.rm = TRUE)
+  ) %>%
+  ungroup()
 ```
 
 **Calculate metrics and run the assessments of Crit B and D, join in Crit A assessment and work out overall RLE**
@@ -427,27 +447,31 @@ pes24_stats <- est_type_24 %>%
     left_join(fp24, by = "full_ecosystem_type_name") %>%
     left_join(fp18, by = "full_ecosystem_type_name") %>%
     left_join(fp11, by = "full_ecosystem_type_name") %>%
+    left_join(fishscore, by = "full_ecosystem_type_name") %>%
+    left_join(outletcount, by = "full_ecosystem_type_name") %>%
  # 2018 metrics
    mutate(prp18_cde = (C18 + D18 + E18)/tot_ext24) %>%
    mutate(prp18_de = (D18 + E18)/tot_ext24) %>%
    mutate(prp18_e= (E18)/tot_ext24) %>%
   # add fishing pressure extent and severity
+   mutate(fishindex18 = 1- (fishsum18/tot_ext24)) %>%
    mutate(prp18_fp_mhvh = (M18 + H18 + VH18)/tot_ext24) %>%
    mutate(prp18_fp_hvh = (H18 + VH18)/tot_ext24) %>%
    mutate(prp18_fp_vh = ( VH18)/tot_ext24) %>%
   # for B evidence of ongoing decline: 
      # 1 calc ext of abc cond and if it drops between t1 and t2 by > 1% then = decline in pes 
-    mutate(pes_decline1118 = ifelse(is.na(((A11 + B11 + C11) - (A18 + B18 + C18)) / (A11 + B11 + C11)) |
+   mutate(pes_decline1118 = ifelse(is.na(((A11 + B11 + C11) - (A18 + B18 + C18)) / (A11 + B11 + C11)) |
                                      (((A11 + B11 + C11) - (A18 + B18 + C18)) / (A11 + B11 + C11)) > 0.01,
                                     "decline1118", "nodecline1118")) %>% 
-     # 2 if fish pressure  goes from M to H OR H to VH OR fp H and VH is >=30% of extent of type : then = incfpe
+     # 2 if fish pressure  goes from M to H OR H to VH OR fp H and VH is >=30% of extent of type : 
     mutate(fp_inc1118 = ifelse(((N11+L11+M11) < (N18+L18+M18)) | (VH18 > VH11) | 
                                  ((H18+VH18)/(N18+L18+M18+H18+VH18) > 0.4), "fpinc1118", "nofpinc1118")) %>% 
  # 2024 metrics
-    mutate(prp24_cde = (C + D + E)/tot_ext24) %>%
+        mutate(prp24_cde = (C + D + E)/tot_ext24) %>%
     mutate(prp24_de = (D + E)/tot_ext24) %>%
     mutate(prp24_e= (E)/tot_ext24) %>%
    # add fishing pressure extent and severity
+   mutate(fishindex24 = 1-(fishsum24/tot_ext24) ) %>%
    mutate(prp24_fp_mhvh = (M + H + VH)/tot_ext24) %>%
    mutate(prp24_fp_hvh = (H + VH)/tot_ext24) %>%
    mutate(prp24_fp_vh = ( VH)/tot_ext24) %>%
@@ -457,33 +481,28 @@ pes24_stats <- est_type_24 %>%
                                     "decline1824", "nodecline1824")) %>% 
     mutate(fp_inc1824 = ifelse(((N18+L18+M18) < (N+L+M)) | (VH > VH18) |  
                                 ((H+VH)/(N+L+M+H+VH) > 0.3), "fpinc1824", "nofpinc1824")) %>% 
- # D3 fishing pressure assessment  
-    mutate(D3f_24 = case_when( prp24_fp_vh >= 0.9 ~ "CR", 
-                              prp24_fp_vh >= 0.7 | prp24_fp_hvh >=0.9 ~ "EN",
-                              prp24_fp_vh >= 0.5 | prp24_fp_hvh >=0.7 | prp24_fp_mhvh >= 0.9 ~ "VU",
+ # D1 fishing pressure assessment  index ****
+    mutate(D1fb_24 = case_when(fishindex24 >= 0.8 ~ "CR",
+                              fishindex24 >= 0.5 ~ "EN",
+                              fishindex24 >= 0.3 ~ "VU",
                               TRUE ~ "LC")) %>% 
-    mutate(D3f_24 = factor(D3f_24, levels = c("LC","VU", "EN", "CR"), ordered = TRUE)) %>%
-    mutate(D3f_18 = case_when( prp18_fp_vh >= 0.9 ~ "CR", 
-                              prp18_fp_vh >= 0.7 | prp18_fp_hvh >=0.9 ~ "EN",
-                              prp18_fp_vh >= 0.5 | prp18_fp_hvh >=0.7 | prp18_fp_mhvh >= 0.9 ~ "VU",
-                              TRUE ~ "LC")) %>% 
-     mutate(D3f_18 = factor(D3f_18, levels = c("LC","VU", "EN", "CR"), ordered = TRUE)) %>%
-       # D3 PES 
+    mutate(D1fb_18 = case_when(fishindex18 >= 0.8 ~ "CR",
+                              fishindex18 >= 0.5 ~ "EN",
+                              fishindex18 >= 0.3 ~ "VU",
+                               TRUE ~ "LC")) %>% 
+ # D3 PES 
     mutate(D3_18 = case_when( prp18_e >= 0.9 ~ "CR", 
                               prp18_e >= 0.7 | prp18_de >=0.9 ~ "EN",
                               prp18_e >= 0.5 | prp18_de >=0.7 | prp18_cde >= 0.9 ~ "VU",
                               TRUE ~ "LC")) %>% 
-    mutate(D3_18 = factor(D3_18, levels = c("LC","VU", "EN", "CR"), ordered = TRUE)) %>%
     mutate(D3_24 = case_when( prp24_e >= 0.9 ~ "CR", 
-                              prp24_de >= 0.7 | prp24_de >=0.9 ~ "EN",
+                              prp24_e >= 0.7 | prp24_de >=0.9 ~ "EN",
                               prp24_e >= 0.5 | prp24_de >=0.7 |prp24_cde >= 0.9 ~ "VU",
                               TRUE ~ "LC")) %>%
-     mutate(D3_24 = factor(D3_24, levels = c("LC","VU", "EN", "CR"), ordered = TRUE)) %>%
-   # add the table with A3 and Asb
+       # add the table with A3 and Asb
     left_join(estnow_lc_metrics, by = "full_ecosystem_type_name") %>%
    # add feature count for B3 calcs
-    left_join(outletcount, by = "full_ecosystem_type_name") %>%
-   mutate(B3_18 = case_when((pes_decline1118 == "decline118" | fp_inc1118 == "fpinc1118") 
+     mutate(B3_18 = case_when((pes_decline1118 == "decline118" | fp_inc1118 == "fpinc1118") 
                             & outletcount <=5  ~ "VU", TRUE ~ "LC")) %>%
    mutate(B3_18 = factor(B3_18, levels = c("LC","VU", "EN", "CR"), ordered = TRUE)) %>%
    mutate(B3_24 = case_when((pes_decline1824 == "decline1824" | fp_inc1824 == "fpinc1824")
@@ -492,18 +511,21 @@ pes24_stats <- est_type_24 %>%
    #clean  cols
    select(-N,-N11, -N18, -L, -L11, -L18, -M, -M11, -M18, -H, -H11, -H18, -VH, -VH11, -VH18, -A, -A11, -A18,
           -B, -B11, -B18, -C, -C11, -C18, -D, -D11, -D18, -E, -E11, -E18, -nat1990, -nat2014, -nat2018, -nat2022, -nat40_9022, -nat40_9018) %>%
-   relocate( A2b_18, A3_18, B3_18, D3f_18, D3_18,  A2b_24, A3_24,   B3_24, D3f_24, D3_24 , 
+   relocate( A2b_18, A3_18, B3_18, D1fb_18, D3_18,  A2b_24, A3_24,   B3_24, D1fb_24, D3_24 , 
             .after = prplost9040_9018) %>%
-  # overall RLE outcome USING  A2b A3 B1 B3 D3
-     rowwise() %>%
-   # FINAL RLE BUT EXCLUDE B1aii and use B3 rather
-    mutate(RLE18 = max(c_across(all_of(c( "D3f_18", "D3_18",  "B3_18", "A2b_18", "A3_18"))), na.rm = TRUE)) %>%
-    mutate(RLE24 = max(c_across(all_of(c( "D3f_24",  "D3_24",  "B3_24", "A2b_24", "A3_24"))), na.rm = TRUE)) %>%
-     ungroup() %>%
-   rowwise() %>%
-  mutate(trigger18 = paste(c("A2b_18", "A3_18", "B3_18", "D3f_18", "D3_18")
+# order the results to enable summing 
+rowwise() %>%  
+  mutate(across( c(A2b_18, A3_18, B3_18, D1fb_18, D3_18, A2b_24, A3_24, 
+                   B3_24, D1fb_24, D3_24), 
+                 ~ factor(.x, levels = c("LC", "VU", "EN", "CR"), ordered = TRUE))) %>%
+  mutate( RLE18 = max(c_across(c(D1fb_18, D3_18, B3_18, A2b_18, A3_18)), 
+                      na.rm = TRUE),     RLE24 = max(c_across(
+                        c(D1fb_24, D3_24, B3_24, A2b_24, A3_24)), na.rm = TRUE)) %>%
+  ungroup() %>%
+  rowwise() %>%
+  mutate(trigger18 = paste(c("A2b_18", "A3_18", "B3_18", "D1fb_18", "D3_18")
                            [c_across(A2b_18:D3_18) == RLE18], collapse = ", ")) %>%
-  mutate(trigger24 = paste(c("A2b_24", "A3_24", "B3_24","D3f_24",   "D3_24")
+  mutate(trigger24 = paste(c("A2b_24", "A3_24", "B3_24","D1fb_24",   "D3_24")
                            [c_across(A2b_24:D3_24) == RLE24], collapse = ", ")) %>%
    ungroup()
   
@@ -831,67 +853,4 @@ ggsave(
   device = "png",                        # File format
   width = 12, height = 10, units = "cm"   # Dimensions
 )
-```
-
-```{r}
-# Use NBA package to make ETS  graph 
-pd_rle24sa_count <- rle24sa_sum %>%
-    rename(`Critically Endangered` = CR, 
-           `Endangered` = EN, 
-           `Vulnerable` = VU, 
-           `Least Concern` = LC ) # %>%
-  # select(-...1) # required if importing from CSV
- 
-rle24sa_barplot_count <- nba_plot(pd_rle24sa_count,
-                  `biogeographical_zone`,
-                  2:5,
-                 CHRT = "bar",
-                 NUM = TRUE,
-                 LAB = "Percentage of ecosystem types",
-                 SAVE = NULL,
-                 SCALE_TEXT = 0.6)
-
-rle24sa_barplot_count <- rle24sa_barplot_count +
-  theme(
-    legend.position = "bottom",             # keep it at the bottom
-    legend.margin = margin(l = -45, r = -5, t = -5, b = -5)) 
-
-#export the 2024 plot of counts 
-ggsave(
-  filename = "outputs/rle24sa_est_barplot_count.png", # File name
-  plot = rle24sa_barplot_count,                  # Plot object
-    width = 9, height = 7, units = "cm",        # Dimensions
-     dpi = 300)                                 # Resolution
-
-
-
-# Make ETS  2018 graph based on counts ####################################
-
-pd_rle18sa_count <- rle18sa_sum %>%
-    rename(`Critically Endangered` = CR, 
-           `Endangered` = EN, 
-           `Vulnerable` = VU, 
-           `Least Concern` = LC ) # %>%
-  # select(-...1) # required if importing from CSV
- 
-rle18sa_barplot_count <- nba_plot(pd_rle18sa_count,
-                  `biogeographical_zone`,
-                  2:5,
-                 CHRT = "bar",
-                 NUM = TRUE,
-                 LAB = "Percentage of ecosystem types",
-                 SAVE = NULL,
-                 SCALE_TEXT = 0.6)
-
-rle18sa_barplot_count <- rle18sa_barplot_count +
-  theme(
-    legend.position = "bottom",             # keep it at the bottom
-    legend.margin = margin(l = -45, r = -5, t = -5, b = -5)) 
-
-#export the 2018 plot of counts 
-ggsave(
-  filename = "outputs/rle18sa_est_barplot_count.png", # File name
-  plot = rle18sa_barplot_count,                  # Plot object
-    width = 9, height = 7, units = "cm",        # Dimensions
-     dpi = 300)                                 # Resolution
 ```
