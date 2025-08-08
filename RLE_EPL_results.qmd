@@ -39,7 +39,8 @@ est_results_for_integration <- est_results_type %>%
   select(full_ecosystem_type_name, biogeographical_zone, extent, RLE24, EPL24, RLE_EPL24) %>%
   mutate(realm = "est") %>%
   rename(type = full_ecosystem_type_name, RLE = RLE24, EPL = EPL24, RLE_EPL = RLE_EPL24, zone = biogeographical_zone) %>%
-   mutate(type = str_sub(type, 3)) 
+   mutate(type = str_sub(type, 3)) %>%
+   mutate(type = str_remove_all(type, " -"))
   
 
 
