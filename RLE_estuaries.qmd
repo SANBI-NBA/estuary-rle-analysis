@@ -720,7 +720,7 @@ rle24_barplot_count <- rle24_barplot_count +
 
 #export the 2024 plot of counts 
 ggsave(
-  filename = "outputs/rle24_est_barplot_count.png", # File name
+  filename = "outputs/rle24_est_barplot_count.jpeg", # File name
   plot = rle24_barplot_count,                  # Plot object
     width = 9, height = 7, units = "cm",        # Dimensions
      dpi = 300)                                 # Resolution
@@ -739,7 +739,7 @@ rle24_barplot_ext <- nba_plot(pd_rle24_ext,
                   `biogeographical_zone`,
                   2:5,
                  CHRT = "bar",
-                 NUM = FALSE,
+                 NUM = TRUE,
                  LAB = "Extent of ecosystem types",
                  SAVE = NULL,
                  SCALE_TEXT = 0.6)
@@ -782,7 +782,7 @@ rle18_barplot_count <- rle18_barplot_count +
 
 #export the 2018 plot of counts 
 ggsave(
-  filename = "outputs/rle18_est_barplot_count.png", # File name
+  filename = "outputs/rle18_est_barplot_count.jpeg", # File name
   plot = rle18_barplot_count,                  # Plot object
     width = 9, height = 7, units = "cm",        # Dimensions
      dpi = 300)                                 # Resolution
@@ -801,7 +801,7 @@ rle18_barplot_ext <- nba_plot(pd_rle18_ext,
                   `biogeographical_zone`,
                   2:5,
                  CHRT = "bar",
-                 NUM = FALSE,
+                 NUM = TRUE,
                  LAB = "Extent of ecosystem types",
                  SAVE = NULL,
                  SCALE_TEXT = 0.6)
@@ -813,7 +813,7 @@ rle18_barplot_ext <- rle18_barplot_ext +
 
 #export the 2018 plot of counts 
 ggsave(
-  filename = "outputs/rle18_est_barplot_ext.png", # File name
+  filename = "outputs/rle18_est_barplot_ext.jpeg", # File name
   plot = rle18_barplot_ext,                  # Plot object
     width = 9, height = 7, units = "cm",        # Dimensions
      dpi = 300)          
@@ -857,7 +857,7 @@ rlie_line_plot <- ggplot(RLIE, aes(x = Year, y = RLIE, group = Zone)) +
   
   #export the graph
 ggsave(
-  filename = "outputs/rlie_est_line_plot.png", # File name
+  filename = "outputs/rlie_est_line_plot.jpeg", # File name
   plot = rlie_line_plot,                   # Plot object
   device = "png",                        # File format
   width = 12, height = 10, units = "cm"   # Dimensions
