@@ -12,6 +12,7 @@ library(tidyverse)
 library(readxl)
 library(terra)
 library(PROJ)
+library(stringr)
 
 # Add spatial data - use IEM Jan 2025 then extract Estuaries
 est_v <-st_read("C:/Users/skownoa/Dropbox/NBAwork/IEMworking/IEM5_12_07012025.gdb", layer = "IEM5_12_07012025") 
@@ -527,7 +528,7 @@ rowwise() %>%
                            [c_across(A2b_18:D3_18) == RLE18], collapse = ", ")) %>%
   mutate(trigger24 = paste(c("A2b_24", "A3_24", "B3_24","D1fb_24",   "D3_24")
                            [c_across(A2b_24:D3_24) == RLE24], collapse = ", ")) %>%
-   ungroup()
+   ungroup() 
   
   
    # reattached bioregions
@@ -537,8 +538,9 @@ rowwise() %>%
  
  est_type_metrics <- est_type_metrics %>%
       left_join(bioreg , by = "full_ecosystem_type_name" ) %>%
+      mutate(biogeographical_zone = str_sub(biogeographical_zone, 2)) %>%
       relocate(biogeographical_zone, .after = full_ecosystem_type_name) %>%
-      relocate(outletcount,  .after = biogeographical_zone)
+      relocate(outletcount,  .after = biogeographical_zone) 
       
 
    # export a csv of results - Condition and EPL per river type 2018 and 2024
@@ -552,7 +554,7 @@ rowwise() %>%
 # make summary counts of RLE categories per zone
  
   rle24_sum <- est_type_metrics %>%
-    group_by(RLE24, biogeographical_zone) %>%
+    group_by(RLE24, biogeographical_zone, .drop=FALSE) %>%
   summarise(count = n(),.groups = 'drop') %>%
   pivot_wider(names_from = RLE24, 
               values_from = count, values_fill = 0) %>%
@@ -565,15 +567,16 @@ rowwise() %>%
   bind_rows(summarise(., biogeographical_zone = "Total", across(where(is.numeric), sum))) %>%
   # Add RLE index
   mutate(RLIE = (1-((CR*4)+(EN*3)+(VU*2)+(LC*1))/((CR+EN+VU+LC)*5))) %>%
-     mutate(biogeographical_zone = factor(biogeographical_zone, levels = c("Total", "dTropical", "cSubTrop" , "bWTemp", "aCTemp"))) %>% ## ggplot plots inverted factors!
-   arrange(biogeographical_zone)
+      mutate(biogeographical_zone = factor(biogeographical_zone, 
+                                           levels = c("Total", "Tropical", "SubTrop" , "WTemp", "CTemp"))) %>%
+   arrange(biogeographical_zone) ## ggplot plots inverted factors!
  
  # export a csv of results - COUNT of RLE 24 per biorg zone
  write.csv(rle24_sum, file = "outputs/rle24_est_sum_count.csv") 
 
  # 2018 summary 
 rle18_sum <- est_type_metrics %>%
-    group_by(RLE18, biogeographical_zone) %>%
+    group_by(RLE18, biogeographical_zone, .drop=FALSE) %>%
   summarise(count = n(),.groups = 'drop') %>%
   pivot_wider(names_from = RLE18, 
               values_from = count, values_fill = 0) %>%
@@ -586,15 +589,18 @@ rle18_sum <- est_type_metrics %>%
   bind_rows(summarise(., biogeographical_zone = "Total", across(where(is.numeric), sum))) %>%
   # Add RLE index
   mutate(RLIE = (1-((CR*4)+(EN*3)+(VU*2)+(LC*1))/((CR+EN+VU+LC)*5))) %>%
-     mutate(biogeographical_zone = factor(biogeographical_zone, levels = c("Total", "dTropical", "cSubTrop" , "bWTemp", "aCTemp"))) %>% ## ggplot plots inverted factors!
-   arrange(biogeographical_zone)
+      mutate(biogeographical_zone = factor(biogeographical_zone, 
+                                           levels = c("Total", "Tropical", "SubTrop" , "WTemp", "CTemp"))) %>%
+   arrange(biogeographical_zone) ## ggplot plots inverted factors!
+   
+   
  
  # export a csv of results - COUNT of RLE 24 per biorg zone
  write.csv(rle18_sum, file = "outputs/rle18_est_sum_count.csv")  
  
  # make 2024 summary of extent of RLE
  rle24_sum_ext <- est_type_metrics %>%
-    group_by(RLE24, biogeographical_zone) %>%
+    group_by(RLE24, biogeographical_zone, .drop=FALSE) %>%
   summarise(extent = round(sum(tot_ext24)/1000000, 0),.groups = 'drop') %>%
   pivot_wider(names_from = RLE24, 
               values_from = extent, values_fill = 0) %>%
@@ -605,15 +611,17 @@ rle18_sum <- est_type_metrics %>%
   ungroup() %>%
   # Add TOTAL row (column-wise sums)
   bind_rows(summarise(., biogeographical_zone = "Total", across(where(is.numeric), sum))) %>%
-   mutate(biogeographical_zone = factor(biogeographical_zone, levels = c("Total", "dTropical", "cSubTrop" , "bWTemp", "aCTemp"))) %>% ## ggplot plots inverted factors!
-   arrange(biogeographical_zone)
+      mutate(biogeographical_zone = factor(biogeographical_zone, 
+                                           levels = c("Total", "Tropical", "SubTrop" , "WTemp", "CTemp"))) %>%
+   arrange(biogeographical_zone) ## ggplot plots inverted factors!
+   
  
  # export a csv of results - EXTENT (km) of REL 24 per biorg zone
   write.csv(rle24_sum_ext, file = "outputs/rle24_est_sum_ext.csv")
   
   # 2018 extent summary 
    rle18_sum_ext <- est_type_metrics %>%
-    group_by(RLE18, biogeographical_zone) %>%
+    group_by(RLE18, biogeographical_zone, .drop=FALSE) %>%
   summarise(extent = round(sum(tot_ext18)/1000000, 0),.groups = 'drop') %>%
   pivot_wider(names_from = RLE18, 
               values_from = extent, values_fill = 0) %>%
@@ -624,8 +632,9 @@ rle18_sum <- est_type_metrics %>%
   ungroup() %>%
   # Add TOTAL row (column-wise sums)
   bind_rows(summarise(., biogeographical_zone = "Total", across(where(is.numeric), sum))) %>%
-   mutate(biogeographical_zone = factor(biogeographical_zone, levels = c("Total", "dTropical", "cSubTrop" , "bWTemp", "aCTemp"))) %>% ## ggplot plots inverted factors!
-   arrange(biogeographical_zone)
+      mutate(biogeographical_zone = factor(biogeographical_zone, 
+                                           levels = c("Total", "Tropical", "SubTrop" , "WTemp", "CTemp"))) %>%
+   arrange(biogeographical_zone) ## ggplot plots inverted factors!
  
  
  # export a csv of results - EXTENT (km) of REL 18 per biorg zone
@@ -742,7 +751,7 @@ rle24_barplot_ext <- rle24_barplot_ext +
 
 #export the 2024 plot of counts 
 ggsave(
-  filename = "outputs/rle24_est_barplot_ext.png", # File name
+  filename = "outputs/rle24_est_barplot_ext.jpeg", # File name
   plot = rle24_barplot_ext,                  # Plot object
     width = 9, height = 7, units = "cm",        # Dimensions
      dpi = 300)                                 # Resolution
@@ -835,10 +844,10 @@ rlie_line_plot <- ggplot(RLIE, aes(x = Year, y = RLIE, group = Zone)) +
   scale_x_discrete(limits = c("2018", "2024"), expand = c(0, 0)) +
   scale_color_manual(values = c(
     "Total" = "black",
-    "aCTemp" = "blue",
-    "bWTemp" = "darkgreen",
-    "cSubTrop" = "brown",
-    "dTropical" = "orange"
+    "CTemp" = "blue",
+    "WTemp" = "darkgreen",
+    "SubTrop" = "brown",
+    "Tropical" = "orange"
   )) +
   coord_cartesian(ylim = c(0.1, 0.9)) +
     guides(color = guide_legend(reverse = TRUE),
