@@ -36,7 +36,7 @@ options(scipen = 999)
 
 # Estuaries have separate features for EFZ SHORE and EFZ, merge these together for calculating PA extent and EOO etc. Also IEM estuaries are divided up due to integration in IEM, so need to merge features based on outletID 
 est_v2 <- est_v %>%
-  group_by(outletID) %>%
+  group_by(outletID, I_EcoType1) %>%
   summarise(Shape = st_union(Shape), .groups = "drop")  
 
 # select colums from  health spreadsheet import
@@ -113,7 +113,7 @@ st_drop_geometry() %>%
 # prepare an estuary spatial layer with correct names (from the table)
 est_v3 <- est_v2 %>%
   left_join(est_t2, by = "outletID") %>%
-  select(outletID, full_ecosystem_type_name, est_name)
+  select(outletID, full_ecosystem_type_name, est_name, I_EcoType1, efz_ha)
 ```
 
 Criterion A calculation using full EFZ area

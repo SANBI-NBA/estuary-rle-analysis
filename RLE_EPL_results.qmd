@@ -51,18 +51,55 @@ write.csv(est_results_for_integration, file = "outputs/est_results_for_integrati
 ```
 
 ```{r}
-# # Add spatial data - use IEM Jan 2025 then extract Estuaries
- est_v4 <- est_v2 %>%
-   left_join(est_t2, by = "outletID")
+
 ```
 
 ```{r}
 #Prepare output spatial data with combined RLE and EPL results
-est_results_vector <- est_v4 %>%
-  left_join(est_results_for_integration, by = c("full_ecosystem_type_name" = "type"))
-  #est_results_vector <- st_transform(est_results_vector, 4326)
+est_results_poly <- est_v3 %>%
+  mutate(type = I_EcoType1) %>% # use this as it is the IEM name and integrated results name (full_ecosystem_type_name clean up of - and spaces) 
+  left_join(est_results_for_integration, by = "type")
 
-st_write(est_results_vector, 
-         "C:/Users/skownoa/Dropbox/NBAwork/Estuaries/est_results_vector.gpkg", 
+st_write(est_results_poly, 
+         "C:/Users/skownoa/Dropbox/NBAwork/Estuaries/est_results_poly.gpkg", 
          delete_layer = TRUE)
+st_write(st_transform(est_results_poly, 4326),
+  "C:/Users/skownoa/Dropbox/NBAwork/Estuaries/est_results_poly_dd.gpkg",
+  delete_layer = TRUE)
+
+
+## now make a point shapefile output
+est_results_point <- st_read(
+  "C:/Users/skownoa/Dropbox/NBAwork/Estuaries/NBA2025_estuary_points_results.shp") %>%                    left_join(
+    est_t, by = c("OUTLET_IDw" = "outletID")) %>%
+  select(
+    OUTLET_IDw, type, efz_ha) %>%
+  left_join(
+    est_results_for_integration, by = "type") 
+
+st_write(est_results_point, 
+         "C:/Users/skownoa/Dropbox/NBAwork/Estuaries/est_results_point_dd.gpkg", 
+         delete_layer = TRUE)
+```
+
+```{r}
+
+# try plot the results to check them 
+ggplot(est_pt) +
+  geom_sf(aes(
+    color = RLE,
+    size = efz_ha
+  ), shape = 21, fill = NA, stroke = 1.5) +  # shape 21 allows border + fill
+  scale_color_manual(
+    values = c(
+      "CR" = "red",
+      "EN" = "orange",
+      "VU" = "yellow",
+      "LC" = "green"  )
+  ) +
+  scale_size(range = c(1, 10)) +
+  theme_minimal() +
+  theme(
+    legend.position = "right"
+  )
 ```
