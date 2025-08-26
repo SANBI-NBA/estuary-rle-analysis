@@ -77,6 +77,11 @@ est_results_point <- st_read(
   left_join(
     est_results_for_integration, by = "type") 
 
+sa <- st_read(
+  "C:/Users/skownoa/Dropbox/NBAwork/Sa_Boundaries/Sa_boundaries_v12.shp") %>% filter(OBJECTID != 3 &  OBJECTID != 12)
+
+est_results_point <- st_transform(est_results_point, st_crs(sa))
+
 st_write(est_results_point, 
          "C:/Users/skownoa/Dropbox/NBAwork/Estuaries/est_results_point_dd.gpkg", 
          delete_layer = TRUE)
@@ -85,21 +90,42 @@ st_write(est_results_point,
 ```{r}
 
 # try plot the results to check them 
-ggplot(est_pt) +
-  geom_sf(aes(
-    color = RLE,
-    size = efz_ha
-  ), shape = 21, fill = NA, stroke = 1.5) +  # shape 21 allows border + fill
+map1 <- ggplot() +
+  geom_sf(data = sa, fill = NA, color = "black", size = 0.5) +  # SA boundary
+  geom_sf(
+    data = est_results_point,
+    aes(color = RLE, size = efz_ha),
+    shape = 21, fill = NA, stroke = 1.5
+  ) +
   scale_color_manual(
     values = c(
       "CR" = "red",
       "EN" = "orange",
       "VU" = "yellow",
-      "LC" = "green"  )
+      "LC" = "green"
+    )
   ) +
   scale_size(range = c(1, 10)) +
-  theme_minimal() +
+  theme_void() +
   theme(
-    legend.position = "right"
-  )
+    legend.position = "right")
+    
+    #export the graph
+ggsave(
+  filename = "outputs/testmap.pdf", # File name
+  plot = map1,                   # Plot object
+  device = "pdf",  
+  dpi = 300, 
+  width = 12, height = 10, units = "cm"   # Dimensions
+)
+  
+#export the graph
+ggsave(
+  filename = "outputs/testmap.jpeg", # File name
+  plot = map1,                   # Plot object
+  device = "jpeg",  
+  dpi = 300, 
+  width = 12, height = 10, units = "cm"   # Dimensions
+)
+  
 ```
