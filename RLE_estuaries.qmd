@@ -112,8 +112,10 @@ st_drop_geometry() %>%
 ```{r}
 # prepare an estuary spatial layer with correct names (from the table)
 est_v3 <- est_v2 %>%
-  left_join(est_t2, by = "outletID") %>%
-  select(outletID, full_ecosystem_type_name, est_name, I_EcoType1, efz_ha)
+  left_join(est, by = "outletID") %>%
+  select(-I_EcoType1.x) %>%
+  rename(I_EcoType1 = I_EcoType1.y)
+  
 ```
 
 Criterion A calculation using full EFZ area
