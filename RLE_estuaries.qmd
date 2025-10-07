@@ -104,7 +104,7 @@ st_drop_geometry() %>%
     TRUE ~ "E"
   )) 
 
-
+write.csv(est, file = "outputs/est_metrics290.csv")
 ```
 
 #### Spatial Analysis
