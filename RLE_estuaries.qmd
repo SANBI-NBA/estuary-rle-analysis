@@ -14,18 +14,34 @@ library(terra)
 library(PROJ)
 library(stringr)
 
+#get data from NBA data sharepoint
+data_file_path <- Sys.getenv("NBA_DATA")
+
+# find and list item - cant use list.files on gdbs this code first looks at all folder ending in gdb then finds the one you want 
+iem_dirs <- list.dirs(
+  path = Sys.getenv("NBA_DATA"),
+  recursive = TRUE,
+  full.names = TRUE)
+
+iem_fp <- grep("IEM5_12_07012025\\.gdb$", iem_dirs, value = TRUE)
+
 # Add spatial data - use IEM Jan 2025 then extract Estuaries
-est_v <-st_read("C:/Users/skownoa/Dropbox/NBAwork/IEMworking/IEM5_12_07012025.gdb", layer = "IEM5_12_07012025") 
+est_v <-st_read(iem_fp, layer = "IEM5_12_07012025") 
 est_v <- est_v %>%
   mutate(outletID = as.numeric(E_EstID)) %>% # IEM miss names outletID as EstID (these are different codes)
   filter(outletID > 0, E_Est_BrdG != "Micro-System") # select only estuaries and exclude micros 
 
 # Add tabular data (in excel change sheet name to Data, and remove last two rows on NAs, change cols with numbers at start of name )
-est_t <- read_excel("C:/Users/skownoa/Dropbox/NBAwork/Estuaries/estuary_assesment2025_v8.xlsx", sheet = "Data")
+
+estdata_fp <- list.files(path = data_file_path, 
+                           pattern = "^estuary_assesment2025_v8\\.xlsx$",
+                           recursive = TRUE,
+                           full.names = TRUE)
+est_t <- read_excel(estdata_fp, sheet = "Data")
 
 # load supplementary data from nba2018 on the eoo a00 and number of locations and ongoing decline
-est_supp <- read_csv("C:/Users/skownoa/Dropbox/NBAwork/Estuaries/from_nba2018_eoo_aoo_numfeat.csv")
-est_feat <- est_supp %>% select(full_ecosystem_type_name, features, declnba18)
+#est_supp <- read_csv("C:/Users/skownoa/Dropbox/NBAwork/Estuaries/from_nba2018_eoo_aoo_numfeat.csv")
+#est_feat <- est_supp %>% select(full_ecosystem_type_name, features, declnba18)
 ```
 
 #### Clean up input data
@@ -123,11 +139,30 @@ Criterion A calculation using full EFZ area
 ```{r, collapse=true}
 #cross tab estuaries with land cover 1990, 2014, 2018 and 2022 and calculate extent lost and rate of loss
 
-# #Add data
-# lc1990 <- rast("C:/Users/skownoa/Dropbox/NBAwork/NLC_change/nlc1990_7class.tif")
-# lc2014 <- rast("C:/Users/skownoa/Dropbox/NBAwork/NLC_change/nlc2014_7class.tif")
-# lc2018 <- rast("C:/Users/skownoa/Dropbox/NBAwork/NLC_change/nlc2018_7class.tif")
-# lc2022 <- rast("C:/Users/skownoa/Dropbox/NBAwork/NLC_change/nlc2022_7class.tif")
+#Add data 1990
+lc90_fp <- list.files(path = data_file_path, 
+                           pattern = "^nlc1990_7class\\.tif$",
+                           recursive = TRUE,
+                           full.names = TRUE)
+lc1990 <- rast(lc90_fp)
+#Add data 2014
+lc14_fp <- list.files(path = data_file_path, 
+                           pattern = "^nlc2014_7class\\.tif$",
+                           recursive = TRUE,
+                           full.names = TRUE)
+lc2014 <- rast(lc14_fp)
+#Add data 2018
+lc18_fp <- list.files(path = data_file_path, 
+                           pattern = "^nlc2018_7class\\.tif$",
+                           recursive = TRUE,
+                           full.names = TRUE)
+lc2018 <- rast(lc18_fp)
+#Add data 2022
+lc22_fp <- list.files(path = data_file_path, 
+                           pattern = "^nlc2022_7class\\.tif$",
+                           recursive = TRUE,
+                           full.names = TRUE)
+lc2022 <- rast(lc22_fp)
 
 
 # Extract raster values under each polygon, return ID
@@ -223,13 +258,39 @@ write.csv(est_lc_metrics, file = "outputs/est_lc_metrics.csv")
 ```{r}
 # A calculations of habitat loss in non open water portion of efz - using NBA2018 esturine habitat map from Janine Adams
 
-#Add data 
-lc1990 <- rast("C:/Users/skownoa/Dropbox/NBAwork/NLC_change/nlc1990_7class.tif")
-lc2014 <- rast("C:/Users/skownoa/Dropbox/NBAwork/NLC_change/nlc2014_7class.tif")
-lc2018 <- rast("C:/Users/skownoa/Dropbox/NBAwork/NLC_change/nlc2018_7class.tif")
-lc2022 <- rast("C:/Users/skownoa/Dropbox/NBAwork/NLC_change/nlc2022_7class.tif")
+#Add data 1990
+lc90_fp <- list.files(path = data_file_path, 
+                           pattern = "^nlc1990_7class\\.tif$",
+                           recursive = TRUE,
+                           full.names = TRUE)
+lc1990 <- rast(lc90_fp)
+#Add data 2014
+lc14_fp <- list.files(path = data_file_path, 
+                           pattern = "^nlc2014_7class\\.tif$",
+                           recursive = TRUE,
+                           full.names = TRUE)
+lc2014 <- rast(lc14_fp)
+#Add data 2018
+lc18_fp <- list.files(path = data_file_path, 
+                           pattern = "^nlc2018_7class\\.tif$",
+                           recursive = TRUE,
+                           full.names = TRUE)
+lc2018 <- rast(lc18_fp)
+#Add data 2022
+lc22_fp <- list.files(path = data_file_path, 
+                           pattern = "^nlc2022_7class\\.tif$",
+                           recursive = TRUE,
+                           full.names = TRUE)
+lc2022 <- rast(lc22_fp)
 
-openw <-st_read("C:/Users/skownoa/Dropbox/NBAwork/Estuaries/openwater_nmu.shp") 
+# Add open water mask 
+ow_fp <- list.files(path = data_file_path, 
+                           pattern = "^openwater_nmu\\.shp$",
+                           recursive = TRUE,
+                           full.names = TRUE)
+openw <- st_read(openw) 
+
+#Remove  open water from EFZ and intersect lc and efz_now
 est_now <- st_difference(est_v3, st_union(openw))
 
 extract2022now <- terra::extract(lc2022, est_now)

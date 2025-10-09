@@ -12,8 +12,10 @@ library(stringr)
 
 ```{r}
 # Load the RLE and EPL results for Estuaries and then combine them and join to estuaries patial data
-RLE <- read.csv("C:/Rdata/RLE_est/outputs/rle_est_metrics_per_type.csv")
-EPL <- read.csv("C:/Rdata/EPL_est/outputs/epl_est_metrics_per_type.csv")
+RLE <- read.csv("outputs/rle_est_metrics_per_type.csv")
+#Fetch EPL results from REPO
+epl_est_git <- "https://raw.githubusercontent.com/askowno/EPL_est/main/outputs/epl_est_metrics_per_type.csv"
+EPL <- read.csv(epl_est_git)
 
 # select only cols required and then join
 RLE <- RLE %>%
@@ -68,17 +70,26 @@ st_write(st_transform(est_results_poly, 4326),
   delete_layer = TRUE)
 
 
-## now make a point shapefile output
-est_results_point <- st_read(
-  "C:/Users/skownoa/Dropbox/NBAwork/Estuaries/NBA2025_estuary_points_results.shp") %>%                    left_join(
-    est_t, by = c("OUTLET_IDw" = "outletID")) %>%
-  select(
-    OUTLET_IDw, type, efz_ha) %>%
-  left_join(
-    est_results_for_integration, by = "type") 
+## Make a point shapefile output
+# Fetch estuary point file from sharepoint
+est_pnt_fp <- list.files(path = data_file_path, 
+                           pattern = "^NBA2025_estuary_points_results\\.shp$",
+                           recursive = TRUE,
+                           full.names = TRUE)
+# Join to results 
+est_results_point <- st_read(est_pnt_fp) %>% 
+                     left_join(est_t, by = c("OUTLET_IDw" = "outletID")) %>%
+  select(OUTLET_IDw, type, efz_ha) %>%
+  left_join(est_results_for_integration, by = "type") 
 
+
+# Fetch boundaries
+sa_fp <- list.files(path = data_file_path, 
+                           pattern = "^SA_boundaries_v12\\.shp$",
+                           recursive = TRUE,
+                           full.names = TRUE)
 sa <- st_read(
-  "C:/Users/skownoa/Dropbox/NBAwork/Sa_Boundaries/Sa_boundaries_v12.shp") %>% filter(OBJECTID != 3 &  OBJECTID != 12)
+  sa_fp) %>% filter(OBJECTID != 3 &  OBJECTID != 12)
 
 est_results_point <- st_transform(est_results_point, st_crs(sa))
 
