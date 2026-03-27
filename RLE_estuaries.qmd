@@ -134,129 +134,10 @@ est_v3 <- est_v2 %>%
   
 ```
 
-Criterion A calculation using full EFZ area
-
-```{r, collapse=true}
-#cross tab estuaries with land cover 1990, 2014, 2018 and 2022 and calculate extent lost and rate of loss
-
-#Add data 1990
-lc90_fp <- list.files(path = data_file_path, 
-                           pattern = "^nlc1990_7class\\.tif$",
-                           recursive = TRUE,
-                           full.names = TRUE)
-lc1990 <- rast(lc90_fp)
-#Add data 2014
-lc14_fp <- list.files(path = data_file_path, 
-                           pattern = "^nlc2014_7class\\.tif$",
-                           recursive = TRUE,
-                           full.names = TRUE)
-lc2014 <- rast(lc14_fp)
-#Add data 2018
-lc18_fp <- list.files(path = data_file_path, 
-                           pattern = "^nlc2018_7class\\.tif$",
-                           recursive = TRUE,
-                           full.names = TRUE)
-lc2018 <- rast(lc18_fp)
-#Add data 2022
-lc22_fp <- list.files(path = data_file_path, 
-                           pattern = "^nlc2022_7class\\.tif$",
-                           recursive = TRUE,
-                           full.names = TRUE)
-lc2022 <- rast(lc22_fp)
-
-
-# Extract raster values under each polygon, return ID
-extract1990 <- terra::extract(lc1990, est_v3)
-extract1990$outletID <- est_v3$outletID[extract1990$ID] # note - indexing not a join
-tb1990 <- extract1990 %>%
-  count(outletID, class = .[[2]], name = "Freq") %>%
-  mutate(YEAR = 1990)
-
-extract2014 <- terra::extract(lc2014, est_v3)
-extract2014$outletID <- est_v3$outletID[extract2014$ID] # note - indexing not a join
-tb2014 <- extract2014 %>%
-  count(outletID, class = .[[2]], name = "Freq") %>%
-  mutate(YEAR = 2014)
-
-extract2018 <- terra::extract(lc2018, est_v3)
-extract2018$outletID <- est_v3$outletID[extract2018$ID] # note - indexing not a join
-tb2018 <- extract2018 %>%
-  count(outletID, class = .[[2]], name = "Freq") %>%
-  mutate(YEAR = 2018)
-
-extract2022 <- terra::extract(lc2022, est_v3)
-extract2022$outletID <- est_v3$outletID[extract2022$ID] # note - indexing not a join
-tb2022 <- extract2022 %>%
-  count(outletID, class = .[[2]], name = "Freq") %>%
-  mutate(YEAR = 2022)
-
-# combine the results
-lc7_list = list(tb1990,tb2014,tb2018,tb2022)
-lc7_rall <- lc7_list %>%  bind_rows() %>%
-  as_tibble()
-
-write.csv(lc7_rall, file = "outputs/lc7_rall_est.csv")
-
-outlet_ras_ext <- lc7_rall %>%
-  filter(YEAR == 2022) %>%
-  group_by(YEAR, outletID) %>%
-  summarise(tot_m2 = sum(Freq*400),.groups = "drop") %>%
-  pivot_wider(names_from = "YEAR", values_from = "tot_m2") %>%
-  rename(efz_area_ras = `2022`)
-
-outlet_nat_ext <- lc7_rall %>%
-  filter(class == 1| is.na(class)) %>%
-  group_by(YEAR, outletID) %>%
-  summarise(nat_m2 = sum(Freq*400),.groups = "drop") %>%
-  pivot_wider(names_from = "YEAR", values_from = "nat_m2", names_glue = "nat{YEAR}")
-
-outlet_lc_metrics <- outlet_ras_ext %>%
-  left_join(outlet_nat_ext, by = "outletID")
-
-est_lc_metrics <- est_t2 %>%
-  left_join(outlet_lc_metrics, by = "outletID") %>%
-  group_by(full_ecosystem_type_name) %>%
-  summarise(type_area = sum(efz_area_ras), nat1990 = sum(nat1990), nat2014 = sum(nat2014), nat2018 = sum(nat2018), nat2022 = sum(nat2022), .groups = "drop") %>%
-  #metrics for A3
-  mutate(prpnat1990 = nat1990/type_area, prpnat2014 = nat2014/type_area,
-         prpnat2018 = nat2018/type_area, prpnat2022 = nat2022/type_area) %>%
-  #metrics for A2b
-  mutate(ard9022 = (nat1990-nat2022)/(2022-1990)) %>%
-  mutate(nat40_9022 = nat1990 - (ard9022*50))  %>%
-  mutate(prplost9040_9022 = (nat1990-nat40_9022)/nat1990) %>%
-  mutate(ard9018 = (nat1990-nat2018)/(2018-1990)) %>%
-  mutate(nat40_9018 = nat1990 - (ard9018*50))  %>%
-  mutate(prplost9040_9018 = (nat1990-nat40_9018)/nat1990) %>%
-    # assessment 2024
-  mutate(A3_24 = case_when(prpnat2022 < 0.1 ~ "CR",
-                        prpnat2022 < 0.3 ~ "EN",
-                        prpnat2022 < 0.5 ~ "VU",
-                        TRUE ~"LC")) %>%
-  mutate(A3_24 = factor(A3_24, levels = c("LC","VU", "EN", "CR"), ordered = TRUE)) %>%
-  mutate(A2b_24 = case_when(prplost9040_9022 >= 0.8 ~ "CR",
-                         prplost9040_9022 >= 0.5 ~ "EN",
-                         prplost9040_9022 >= 0.3 ~ "VU",
-                         TRUE ~ "LC")) %>%
-  mutate(A2b_24 = factor(A2b_24, levels = c("LC","VU", "EN", "CR" ), ordered = TRUE)) %>%
-# assessment 2018
- mutate(A3_18 = case_when(prpnat2018 < 0.1 ~ "CR",
-                        prpnat2018 < 0.3 ~ "EN",
-                        prpnat2018 < 0.5 ~ "VU",
-                        TRUE ~"LC")) %>%
-  mutate(A3_18 = factor(A3_18, levels = c("LC","VU", "EN", "CR"), ordered = TRUE)) %>%
-  mutate(A2b_18 = case_when(prplost9040_9018 >= 0.8 ~ "CR",
-                         prplost9040_9018 >= 0.5 ~ "EN",
-                         prplost9040_9018 >= 0.3 ~ "VU",
-                         TRUE ~ "LC")) %>%
-  mutate(A2b_18 = factor(A2b_18, levels = c("LC","VU", "EN", "CR" ), ordered = TRUE))
-
-write.csv(est_lc_metrics, file = "outputs/est_lc_metrics.csv")
-```
-
 **Criterion A using EFZ without OPEN WATER area**
 
 ```{r}
-# A calculations of habitat loss in non open water portion of efz - using NBA2018 esturine habitat map from Janine Adams
+# A calculations of habitat loss in non open water portion of efz - using NBA2018 estuarine habitat map from Janine Adams
 
 #Add data 1990
 lc90_fp <- list.files(path = data_file_path, 
@@ -710,50 +591,7 @@ rle18_sum <- est_type_metrics %>%
  
 ```
 
-**Summarise SA ETS approach results**
-
-```{r, collapse=true}
-# # make summary counts of ETS SA  categories per zone
-#  
-#   rle24sa_sum <- est_type_metrics %>%
-#     group_by(ETS24, biogeographical_zone) %>%
-#   summarise(count = n(),.groups = 'drop') %>%
-#   pivot_wider(names_from = ETS24, 
-#               values_from = count, values_fill = 0) %>%
-#   relocate(VU, .before = EN)%>%
-#      # Add row-wise TOTAL
-#   rowwise() %>%
-#   mutate(Total = sum(c_across(where(is.numeric)))) %>%
-#   ungroup() %>%
-#   # Add TOTAL row (column-wise sums)
-#   bind_rows(summarise(., biogeographical_zone = "Total", across(where(is.numeric), sum))) %>%
-#      mutate(biogeographical_zone = factor(biogeographical_zone, levels = c("Total", "dTropical", "cSubTrop" , "bWTemp", "aCTemp"))) %>% ## ggplot plots inverted factors!
-#    arrange(biogeographical_zone)
-#  
-#  # export a csv of results - COUNT of ETS 24 per biorg zone
-#  write.csv(rle24sa_sum, file = "outputs/rle24sa_est_sum_count.csv") 
-# 
-#  # 2018 summary 
-# rle18sa_sum <- est_type_metrics %>%
-#     group_by(ETS18, biogeographical_zone) %>%
-#   summarise(count = n(),.groups = 'drop') %>%
-#   pivot_wider(names_from = ETS18, 
-#               values_from = count, values_fill = 0) %>%
-#   relocate(VU, .before = EN)%>%
-#      # Add row-wise TOTAL
-#   rowwise() %>%
-#   mutate(Total = sum(c_across(where(is.numeric)))) %>%
-#   ungroup() %>%
-#   # Add TOTAL row (column-wise sums)
-#   bind_rows(summarise(., biogeographical_zone = "Total", across(where(is.numeric), sum))) %>%
-#        mutate(biogeographical_zone = factor(biogeographical_zone, levels = c("Total", "dTropical", "cSubTrop" , "bWTemp", "aCTemp"))) %>% ## ggplot plots inverted factors!
-#    arrange(biogeographical_zone)
-#  
-#  # export a csv of results - COUNT of ETS 18 per biorg zone
-#  write.csv(rle18sa_sum, file = "outputs/rle18sa_est_sum_count.csv")  
-```
-
-#### **Make RLE graphs for NBA**
+#### Make RLE graphs for NBA
 
 ```{r}
 

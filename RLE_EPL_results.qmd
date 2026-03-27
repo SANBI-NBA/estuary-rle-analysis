@@ -13,8 +13,8 @@ library(stringr)
 ```{r}
 # Load the RLE and EPL results for Estuaries and then combine them and join to estuaries patial data
 RLE <- read.csv("outputs/rle_est_metrics_per_type.csv")
-#Fetch EPL results from REPO
-epl_est_git <- "https://raw.githubusercontent.com/askowno/EPL_est/main/outputs/epl_est_metrics_per_type.csv"
+#Fetch EPL results from REPO 
+epl_est_git <- "https://raw.githubusercontent.com/SANBI-NBA/estuary-epl-analysis/main/outputs/epl_est_metrics_per_type.csv"
 EPL <- read.csv(epl_est_git)
 
 # select only cols required and then join
