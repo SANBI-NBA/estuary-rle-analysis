@@ -45,7 +45,7 @@ Summary table - count of estuarine ecosystem types per biogeographic zone per RL
 Summary table - extent of estuarine ecosystem per biogeographic zone per RLE category [rle24_est_sum_ext.csv](outputs/rle24_est_sum_ext.csv)
 
 | RLE 2024 - count of types per category | RLE 2024 - extent of types per category |
-|------------------------------------|------------------------------------|
+|----|----|
 | ![](outputs/rle24_est_barplot_count.jpeg) | ![](outputs/rle24_est_barplot_ext.jpeg) |
 
 **RLE Index**
@@ -53,7 +53,7 @@ Summary table - extent of estuarine ecosystem per biogeographic zone per RLE cat
 Reflecting changes in ecosystem RLE between 2018 and 2024
 
 | RLIE |   |
-|------------------------------------|------------------------------------|
+|----|----|
 | ![](outputs/rlie_est_line_plot.jpeg) | Red List Index of Ecosystems between 2018 and 2024. Showing increased risk of collapse for all estuary biogeographical zones. |
 
 **Combined RLE and EPL results**
