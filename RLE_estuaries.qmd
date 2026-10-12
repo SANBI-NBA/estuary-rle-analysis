@@ -14,30 +14,64 @@ library(terra)
 library(PROJ)
 library(stringr)
 
-#get data from NBA data sharepoint
-data_file_path <- Sys.getenv("NBA_DATA")
+##file names
+#ecosystem map
+est_eco_map_fl <- "EstuarineEcosystemMap2018.shp"
+#condition map
+est_cnd_fl <- "Updated Estuary Realm Condition 2025.xlsx"
+#land cover change 
+lc90_fl <- "sa_lcov_1990_gti_geo_wgs84_vs18.tif"
+lc14_fl <- "sa_lcov_2013-14_gti_geo_wgs84_vs22b.tif"
+lc18_fl <- "SA_NLC_2018_ALBERS_CALC.tif"
+lc22_fl <-  "SA_NLC_2022_ALBERS.tif"
+# Add open water mask - could this be the eez?
+ow_fl <- "NBA2018_Dunebase_to_EEZ.shp"
 
-# find and list item - cant use list.files on gdbs this code first looks at all folder ending in gdb then finds the one you want 
-iem_dirs <- list.dirs(
-  path = Sys.getenv("NBA_DATA"),
-  recursive = TRUE,
-  full.names = TRUE)
+# Add spatial data 
+est_v <- st_read(list.files(path=Sys.getenv("NBA_DATA"),
+                                   pattern=est_eco_map_fl,
+                                   recursive = T,
+                                   full.names = T)[1]) |> 
+  filter(BroadGroup != "Micro-System")# select only estuaries and exclude micros
 
-iem_fp <- grep("IEM5_12_07012025\\.gdb$", iem_dirs, value = TRUE)
 
-# Add spatial data - use IEM Jan 2025 then extract Estuaries
-est_v <-st_read(iem_fp, layer = "IEM5_12_07012025") 
-est_v <- est_v %>%
-  mutate(outletID = as.numeric(E_EstID)) %>% # IEM miss names outletID as EstID (these are different codes)
-  filter(outletID > 0, E_Est_BrdG != "Micro-System") # select only estuaries and exclude micros 
+# Add tabular data 
 
-# Add tabular data (in excel change sheet name to Data, and remove last two rows on NAs, change cols with numbers at start of name )
+est_t <- readxl::read_xlsx(list.files(path= Sys.getenv("NBA_DATA"),
+                                   pattern=est_cnd_fl,
+                                   recursive = T,
+                                   full.names = T),
+                                   sheet = 1, guess_max = 10000) |> 
+  filter(!is.na(NAME))
 
-estdata_fp <- list.files(path = data_file_path, 
-                           pattern = "^estuary_assesment2025_v8\\.xlsx$",
-                           recursive = TRUE,
-                           full.names = TRUE)
-est_t <- read_excel(estdata_fp, sheet = "Data")
+
+
+lc1990 <- rast(list.files(path=Sys.getenv("NBA_DATA"),
+                                   pattern=lc90_fl,
+                                   recursive = T,
+                                   full.names = T)[1])
+
+lc2014 <- rast(list.files(path=Sys.getenv("NBA_DATA"),
+                                   pattern=lc14_fl,
+                                   recursive = T,
+                                   full.names = T)[1])
+
+lc2018 <- rast(list.files(path=Sys.getenv("NBA_DATA"),
+                                   pattern=lc18_fl,
+                                   recursive = T,
+                                   full.names = T)[1])
+
+lc2022 <- rast(list.files(path=Sys.getenv("NBA_DATA"),
+                                   pattern=lc22_fl,
+                                   recursive = T,
+                                   full.names = T)[1])
+
+
+openw <- st_read(list.files(path=Sys.getenv("NBA_DATA"),
+                                   pattern=ow_fl,
+                                   recursive = T,
+                                   full.names = T)[1]) 
+
 
 # load supplementary data from nba2018 on the eoo a00 and number of locations and ongoing decline
 #est_supp <- read_csv("C:/Users/skownoa/Dropbox/NBAwork/Estuaries/from_nba2018_eoo_aoo_numfeat.csv")
@@ -52,127 +86,53 @@ options(scipen = 999)
 
 # Estuaries have separate features for EFZ SHORE and EFZ, merge these together for calculating PA extent and EOO etc. Also IEM estuaries are divided up due to integration in IEM, so need to merge features based on outletID 
 est_v2 <- est_v %>%
-  group_by(outletID, I_EcoType1) %>%
-  summarise(Shape = st_union(Shape), .groups = "drop")  
+  summarise(geometry = st_union(geometry), .by = c(Estuary_Na, EcosystemT, Bioregion))  |> 
+  rename(estuary = Estuary_Na,
+         eco_type = EcosystemT,
+         bioregion = Bioregion)
 
 # select colums from  health spreadsheet import
 est_t2 <- est_t %>%
-  select(outletID,  estID, east_DD, south_DD, est_name, full_ecosystem_type_name, est_ecosystem_type_code, biogeographical_zone, efz_ha, `2025_est_condition`, `2018_est_condition`, `2011_est_condition`, Pressure_2025_fishing_effort_DEFF, Pressure_2018_fishing_effort_DEFF, Pressure_2011_fishing_effort_DEFF, `hundred_km-zone`, `Condition_100km-zone`, fish, fish2018) %>% 
+  select(`Est ID (West to East)`,
+         NAME,
+         `Cumulative Pressure Level`,
+         `Ecological Category (Mean)`,
+         ...34,
+         `NBA Condition Category`
+         ) |> 
+
 # clean up names for r
-  rename(hund_km_zone =`hundred_km-zone`, hund_km_zone_cond = `Condition_100km-zone`, 
-       condition24 =`2025_est_condition`, condition18 =`2018_est_condition`, 
-       condition11 = `2011_est_condition`, fishing_effort24 = Pressure_2025_fishing_effort_DEFF,
-       fishing_effort18 = Pressure_2018_fishing_effort_DEFF, 
-       fishing_effort11 = Pressure_2011_fishing_effort_DEFF) %>% 
-  #fix Vh case 
-  mutate(fishing_effort24 = ifelse(fishing_effort24 == "Vh", "VH", fishing_effort24)) %>%
-  # drop black rows at end of table
-  filter(!is.na(outletID ))
+  rename(id_west_east =`Est ID (West to East)`,
+         estuary = NAME, 
+       cum_pres =`Cumulative Pressure Level`,
+       PES25 =`Ecological Category (Mean)`, 
+       rec_actions = ...34, 
+       mod25 =  `NBA Condition Category`) 
 
 # combined estuary data into a table
-est <- est_v2 %>%
-  left_join(est_t2, by = "outletID") %>%
-  # recalculate EFZ area m2 to check the data from Lara is correct
-   mutate(efz_area = as.numeric(st_area(.))) %>%
-st_drop_geometry() %>%
-  # convert condition  scores to NBA modification classes  
-  mutate(mod11 = case_when(
-    round(condition11, 0) >= 90 ~ "Natural",
-    round(condition11, 0) >= 75 ~ "NearNatural",
-    round(condition11, 0) >= 60 ~ "Moderate",
-    round(condition11, 0) >= 40 ~ "Heavily",
-    TRUE ~ "Severely"
-  )) %>%
-  mutate(mod18 = case_when(
-    round(condition18, 0) >= 90 ~ "Natural",
-    round(condition18, 0) >= 75 ~ "NearNatural",
-    round(condition18, 0) >= 60 ~ "Moderate",
-    round(condition18, 0) >= 40 ~ "Heavily",
-    TRUE ~ "Severely"
-  )) %>%
-   mutate(mod24 = case_when(
-    round(condition24, 0) >= 90 ~ "Natural",
-    round(condition24, 0) >= 75 ~ "NearNatural",
-    round(condition24, 0) >= 60 ~ "Moderate",
-    round(condition24, 0) >= 40 ~ "Heavily",
-    TRUE ~ "Severely"
-  )) %>%
-   # convert condition  scores to PES classes
-  mutate(pes11 = case_when(
-    round(condition11, 0) >= 90 ~ "A",
-    round(condition11, 0) >= 75 ~ "B",
-    round(condition11, 0) >= 60 ~ "C",
-    round(condition11, 0) >= 40 ~ "D",
-    TRUE ~ "E"
-  )) %>%
-  mutate(pes18 = case_when(
-    round(condition18, 0) >= 90 ~ "A",
-    round(condition18, 0) >= 75 ~ "B",
-    round(condition18, 0) >= 60 ~ "C",
-    round(condition18, 0) >= 40 ~ "D",
-    TRUE ~ "E"
-  )) %>%
-   mutate(pes24 = case_when(
-    round(condition24, 0) >= 90 ~ "A",
-    round(condition24, 0) >= 75 ~ "B",
-    round(condition24, 0) >= 60 ~ "C",
-    round(condition24, 0) >= 40 ~ "D",
-    TRUE ~ "E"
-  )) 
+est_v3 <- est_v2 %>%
+  left_join(est_t2, by = "estuary") 
 
-write.csv(est, file = "outputs/est_metrics290.csv")
+
+
+write.csv(est_v3 |> 
+            st_drop_geometry(), file = "outputs/est_metrics25.csv")
 ```
 
 #### Spatial Analysis
 
-```{r}
-# prepare an estuary spatial layer with correct names (from the table)
-est_v3 <- est_v2 %>%
-  left_join(est, by = "outletID") %>%
-  select(-I_EcoType1.x) %>%
-  rename(I_EcoType1 = I_EcoType1.y)
-  
-```
 
-**Criterion A using EFZ without OPEN WATER area**
+**Criterion A using EFZ (eco type?) without OPEN WATER area**
 
 ```{r}
-# A calculations of habitat loss in non open water portion of efz - using NBA2018 estuarine habitat map from Janine Adams
+# A calculations of habitat loss in non open water portion of efz - using NBA2018 estuarine habitat map from BGIS
 
-#Add data 1990
-lc90_fp <- list.files(path = data_file_path, 
-                           pattern = "^nlc1990_7class\\.tif$",
-                           recursive = TRUE,
-                           full.names = TRUE)
-lc1990 <- rast(lc90_fp)
-#Add data 2014
-lc14_fp <- list.files(path = data_file_path, 
-                           pattern = "^nlc2014_7class\\.tif$",
-                           recursive = TRUE,
-                           full.names = TRUE)
-lc2014 <- rast(lc14_fp)
-#Add data 2018
-lc18_fp <- list.files(path = data_file_path, 
-                           pattern = "^nlc2018_7class\\.tif$",
-                           recursive = TRUE,
-                           full.names = TRUE)
-lc2018 <- rast(lc18_fp)
-#Add data 2022
-lc22_fp <- list.files(path = data_file_path, 
-                           pattern = "^nlc2022_7class\\.tif$",
-                           recursive = TRUE,
-                           full.names = TRUE)
-lc2022 <- rast(lc22_fp)
-
-# Add open water mask 
-ow_fp <- list.files(path = data_file_path, 
-                           pattern = "^openwater_nmu\\.shp$",
-                           recursive = TRUE,
-                           full.names = TRUE)
-openw <- st_read(openw) 
 
 #Remove  open water from EFZ and intersect lc and efz_now
 est_now <- st_difference(est_v3, st_union(openw))
+
+st_write(est_v3, "outputs/est_v3.gpkg")
+st_write(est_now, "outputs/est_now.gpkg")
 
 extract2022now <- terra::extract(lc2022, est_now)
 extract2022now$outletID <- est_now$outletID[extract2022now$ID] # note - indexing not a join
