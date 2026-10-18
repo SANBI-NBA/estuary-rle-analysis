@@ -18,7 +18,7 @@ library(stringr)
 #ecosystem map
 est_eco_map_fl <- "EstuarineEcosystemMap2018.shp"
 #condition map
-est_cnd_fl <- "Updated Estuary Realm Condition 2025.xlsx"
+est_cnd_fl <- "NBA2025_2018_2011 health scores.xlsx"
 #land cover change 
 lc90_fl <- "sa_lcov_1990_gti_geo_wgs84_vs18.tif"
 lc14_fl <- "sa_lcov_2013-14_gti_geo_wgs84_vs22b.tif"

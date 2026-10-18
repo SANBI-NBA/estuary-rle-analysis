@@ -1,0 +1,209 @@
+# ============================================================
+# Indicator assessment metadata
+# ============================================================
+# This file records the code, input data and outputs associated
+# with a specific indicator assessment.
+#
+# Update this file for each assessment and commit it with the
+# corresponding code release.
+#
+# As this is YAML format, be sure to maintain indentations to
+# maintain code functionality.
+#
+# ============================================================
+
+
+# ------------------------------------------------------------
+# Assessment information
+# ------------------------------------------------------------
+
+assessment:
+
+  # Stable identifier for this assessment.
+  # Use a convention that will remain unique across assessments.
+  id: "estuarine-threat-status-2025-12-05"
+
+  # Name of the indicator being assessed.
+  indicator: "Ecosystem threat status"
+
+ # Purpose or reporting process for which the assessment
+  # was undertaken.
+  # Examples:
+  # - National Biodiversity Assessment
+  # - CBD National Report
+  # - SDG reporting
+  # - NBSAP progress assessment
+  assessment_for: "National Biodiversity Assessment"
+
+  # Date on which the assessment was completed.
+  assessment_date: "2025-12-05"
+
+  # Location where the official assessment outputs are published.
+  # This may be a DOI, institutional repository, website,
+  # database record or report URL.
+  published_at: "https://bgis.sanbi.org/SpatialDataset/Detail/7790"
+
+  # Optional notes explaining anything unusual about this
+  # assessment or changes from the previous assessment.
+  notes:
+
+# ------------------------------------------------------------
+# Code version
+# ------------------------------------------------------------
+
+code:
+
+  # Repository containing the analytical workflow.
+  repository: "https://github.com/SANBI-NBA/estuary-rle-analysis"
+
+  # Git release/tag used for this assessment.
+  release_tag: "NBA 2025 launch version"
+
+  # Optional version of the assessment method, where this is
+  # distinct from the software/code version. Update method version
+  # when there are substantial changes to the way the indicator is computed.
+  method_version: "1.0"
+
+# ------------------------------------------------------------
+# Input data
+# ------------------------------------------------------------
+
+input_data:
+
+    # Give each input dataset a unique ID. Repeat this block
+    # for each input dataset
+    - id: "dataset_01"
+
+      # Provide the name of the data source - a database or spatial layer that is maintained
+      # independently from the assessment where you have obtained your input data from
+      data_source: "National Estuarine Ecosystem Map"
+
+      # File extracted from the source dataset and used in this assessment
+      file: "EstuarineEcosystemMap2018.shp"
+
+      # Location of the input data file
+      location: "https://bgis.sanbi.org/SpatialDataset/Detail/2683"
+
+      # Date on which the assessment input file was extracted
+      # from the source dataset
+      extraction_date: "2025-12-05"
+
+    - id: "dataset_02"
+
+      # Provide the name of the data source - a database or spatial layer that is maintained
+      # independently from the assessment where you have obtained your input data from
+      data_source: "Estuarine condition scores"
+
+      # File extracted from the source dataset and used in this assessment
+      file: "NBA2025_2018_2011 health scores.xlsx"
+
+      # Location of the input data file
+      location: "sanbi.org.za\SANBI Marine Programme - marine_data - marine_data\field_data\sector_activities"
+
+      # Date on which the assessment input file was extracted
+      # from the source dataset
+      extraction_date: "2025-12-05"
+
+    - id: "dataset_03"
+
+      # Provide the name of the data source - a database or spatial layer that is maintained
+      # independently from the assessment where you have obtained your input data from
+      data_source: "South African mainland open water polygon"
+
+      # File extracted from the source dataset and used in this assessment
+      file: "NBA2018_Dunebase_to_EEZ.shp"
+
+      # Location of the input data file
+      location: "https://bgis.sanbi.org/SpatialDataset/Detail/3696"
+
+      # Date on which the assessment input file was extracted
+      # from the source dataset
+      extraction_date: "2025-12-05"
+
+  - id: "dataset_04"
+
+      # Provide the name of the data source - a database or spatial layer that is maintained
+      # independently from the assessment where you have obtained your input data from
+      data_source: "South African land change data"
+
+      # File extracted from the source dataset and used in this assessment
+      file: "sa_lcov_1990_gti_geo_wgs84_vs18.tif"
+
+      # Location of the input data file
+      location: "https://www.dffe.gov.za/egis"
+
+      # Date on which the assessment input file was extracted
+      # from the source dataset
+      extraction_date: "2025-12-05"
+      
+  - id: "dataset_05"
+
+      # Provide the name of the data source - a database or spatial layer that is maintained
+      # independently from the assessment where you have obtained your input data from
+      data_source: "South African land change data"
+
+      # File extracted from the source dataset and used in this assessment
+      file: "sa_lcov_2013-14_gti_geo_wgs84_vs22b.tif"
+
+      # Location of the input data file
+      location: "https://www.dffe.gov.za/egis"
+
+      # Date on which the assessment input file was extracted
+      # from the source dataset
+      extraction_date: "2025-12-05"
+
+  - id: "dataset_06"
+
+      # Provide the name of the data source - a database or spatial layer that is maintained
+      # independently from the assessment where you have obtained your input data from
+      data_source: "South African land change data"
+
+      # File extracted from the source dataset and used in this assessment
+      file: "SA_NLC_2018_ALBERS_CALC.tif"
+
+      # Location of the input data file
+      location: "https://www.dffe.gov.za/egis"
+
+      # Date on which the assessment input file was extracted
+      # from the source dataset
+      extraction_date: "2025-12-05"
+
+  - id: "dataset_07"
+
+      # Provide the name of the data source - a database or spatial layer that is maintained
+      # independently from the assessment where you have obtained your input data from
+      data_source: "South African land change data"
+
+      # File extracted from the source dataset and used in this assessment
+      file: "SA_NLC_2022_ALBERS.tif"
+
+      # Location of the input data file
+      location: "https://www.dffe.gov.za/egis"
+
+      # Date on which the assessment input file was extracted
+      # from the source dataset
+      extraction_date: "2025-12-05"
+
+
+
+# ------------------------------------------------------------
+# Assessment outputs
+# ------------------------------------------------------------
+
+outputs:
+
+  # Repeat this code block for each output connected to this assessment
+  - id: "threat_status_results"
+
+    # Description of the output.
+    name: "Threat status assessment results"
+
+    # Filename produced by the assessment workflow.
+    file: "rle_est_metrics_per_type.csv"
+
+    # Location of the assessment output.
+    location: "https://github.com/SANBI-NBA/estuary-rle-analysis/tree/main/outputs"
+
+    # Optional publication location where this particular output
+    # can be accessed externally.
+    published_at: "https://bgis.sanbi.org/SpatialDataset/Detail/7790"
